@@ -1,10 +1,42 @@
 services:
+  
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: time_db
+      MYSQL_PORT: 3306
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - ~db:/var/lib/mysql
+      - ./init.sql:/data/application/init.sql
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=password
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 55
+
   api:
     build: ./api
     ports:
-      - "5000:5000"
+      - 5555:5000
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   
   frontend:
     build: ./frontend
     ports:
       - "8954:8954"
+  
+volumes:
+  db:
